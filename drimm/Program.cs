@@ -9,6 +9,10 @@ namespace SyntenyFast
 
         private static void Main(string[] args)
         {
+            foreach(String s in args)
+            {
+                Console.Out.WriteLine(s);
+            }
             
             int cycleLengthThreshold = 30;          //环长度          
        
