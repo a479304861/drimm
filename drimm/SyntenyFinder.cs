@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
+using Util.Collection;
 
 namespace SyntenyFast
 {
@@ -55,16 +56,19 @@ namespace SyntenyFast
             ((List<IList<int>>)simplePaths).Sort((a,b)=> multiplicityBySimplePathList[a].CompareTo(multiplicityBySimplePathList[b]));
             ((List<int>) multiplicities).Sort();
             //write the splitNodeGlobal
-           
+
             IList<int> modifiedSequence = _aBruijnGraph.GetModifiedSequence();      //获得修改后的sequence
             IDictionary<int, int> colorByNodeID = _colorTracker.BackTracking(simplePaths); //_aBruijnGraph.PropagateSkeletonColor(simplePaths,propagationRadius);
             IList<int> smoothColor = _sequenceSmother.Smooth(sequence, colorByNodeID);
             IList<int> listColors = _sequenceSmother.ReStoreDust(ref sequence, smoothColor);
             IList<IList<int>> blocksSign = _sequenceSmother.GetBlocksSign(modifiedSequence, simplePaths, 2);
-
-           
+            IList<Node<int>> modifiedNodeSequence = _aBruijnGraph.GetModifiedNodeSequence();
+            IDictionary<Node<int>, Node<int>> workToSource = _aBruijnGraph.GetWorkToSource();
+            IDictionary<int, IList<IList<Node<int>>>> SynNodeListBySynId = _sequenceSmother.getSynNodeListBySynId(modifiedNodeSequence, simplePaths);
+ 
+       
             _dataWriter.WriteSplit(splitNodeGlobal,outdir);
-            _dataWriter.WriteSyntenyConsensus(multiplicities, simplePaths);
+            _dataWriter.WriteSyntenyConsensus(multiplicities, simplePaths,SynNodeListBySynId,workToSource,outdir);
             _dataWriter.WriteSequenceWithColor(sequence, listColors);
             _dataWriter.WriteModifiedSequence(modifiedSequence);
             _dataWriter.WriteBlocksSign(blocksSign, outdir);

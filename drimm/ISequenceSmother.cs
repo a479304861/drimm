@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Util.Collection;
 
 namespace SyntenyFast
 {
@@ -35,5 +36,8 @@ namespace SyntenyFast
         /// <param name="minimumBlockLength">the minimum block Length</param>
         /// <returns></returns>
         IList<IList<int>> GetBlocksSign(IList<int> modifiedSequence, IList<IList<int>> simplePath, int minimumBlockLength);
+
+
+        IDictionary<int, IList<IList<Node<int>>>> getSynNodeListBySynId(IList<Node<int>> modifiedNodeSequence, IList<IList<int>> simplePaths);
     }
 }

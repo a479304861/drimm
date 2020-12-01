@@ -10,12 +10,21 @@ namespace SyntenyFast
         private int _maxInt = int.MaxValue;
         private const int _limitCycleProcessing = 30;
 
+        private static IDictionary<Node<int>, Node<int>> _workToSource;
+       public IDictionary<Node<int>, Node<int>> getWorkToSource()
+        {
+            return _workToSource;
+        }
+        public void setWorkToSource(IDictionary<Node<int>, Node<int>> workToSource)
+        {
+            _workToSource = workToSource;
+        }
         /// <summary>
         /// Get a list of weak edges that is not in the maximum spanning tree
         /// </summary>
         /// <param name="multiplicityByEdges">A mapping between an edge and its multiplicity in the graph</param>
         /// <returns>list of weak edges, order from weakest edge to the strongest</returns>
-        
+
         public IList<Pair<int>> GetWeakEdges(IDictionary<Pair<int>, int> multiplicityByEdges)
         {
             List<Pair<int>> edgeList = new List<Pair<int>>(multiplicityByEdges.Keys);   //把边的节点变成一个list
@@ -219,11 +228,12 @@ namespace SyntenyFast
                         deletedNodes.Add(node.Value);
                 }   
             }
-            IList<int> alternatePath = GetAlternatePath(routeSequenceNodes, secondSequenceNodes);
+            IList<Node<int>> alternateNodePath;
+            IList<int> alternatePath = GetAlternatePath(routeSequenceNodes, secondSequenceNodes,out alternateNodePath);
             if (alternatePath!= null && alternatePath.Count != 0){
 
                 Node<int> currentNodeReRoute = firstEnterNodeReRoute;
-                GetCurrentNode(graph, alternatePath, ref currentNodeReRoute);       //图中消除路径
+                GetCurrentNode(graph, alternatePath, ref currentNodeReRoute,alternateNodePath);       //添加新的节点
                 currentNodeReRoute.Next = firstExitNodeReRoute;
                 firstExitNodeReRoute.Previous = currentNodeReRoute; 
             }
@@ -280,8 +290,9 @@ namespace SyntenyFast
         }
 
     
-        private static IList<int> GetAlternatePath(IList<Node<int>> shouldBeReRouteSequence, List<Node<int>> secondSequenceNodes)
+        private static IList<int> GetAlternatePath(IList<Node<int>> shouldBeReRouteSequence, List<Node<int>> secondSequenceNodes, out IList<Node<int>> alternateNodePath)
         {
+            alternateNodePath = new List<Node<int>>();
             IList<int> alternatePath = new List<int>();
             int endNode = shouldBeReRouteSequence[shouldBeReRouteSequence.Count - 1].Value;
             int beginNode = shouldBeReRouteSequence[0].Value;
@@ -299,6 +310,7 @@ namespace SyntenyFast
                         break;
                         }
                     alternatePath.Add(value);
+                    alternateNodePath.Add(secondSequenceNodes[i]);
                 }
                 if (foundEnd)
                     return alternatePath;
@@ -312,6 +324,7 @@ namespace SyntenyFast
                         break;
                     }
                     alternatePath.Add(value);
+                    alternateNodePath.Add(secondSequenceNodes[i]);
                 }
                 if (foundEnd)
                     return alternatePath;
@@ -337,12 +350,19 @@ namespace SyntenyFast
             return false; 
         }
 
-        private static void GetCurrentNode(IDictionary<int, IList<Node<int>>> graph, IList<int> secondSequenceNodes, ref Node<int> currentNode)
+        private static void GetCurrentNode(IDictionary<int, IList<Node<int>>> graph, IList<int> secondSequenceNodes, ref Node<int> currentNode, IList<Node<int>> alternateNodePath)
         {
 
             foreach (int  node in secondSequenceNodes)
             {
                 Node<int> newNode = new Node<int>(node);
+               int index= secondSequenceNodes.IndexOf(node);
+                if (_workToSource.ContainsKey(alternateNodePath[index]))
+                {
+                    Node<int> sourceNode = _workToSource[alternateNodePath[index]];
+                    _workToSource.Add(newNode, sourceNode);
+                }
+              
                 if (graph.ContainsKey(newNode.Value))
                     graph[newNode.Value].Add(newNode);
                 else
@@ -997,13 +1017,13 @@ namespace SyntenyFast
                             Node<int> previous = currentNode.Previous;
                             if (previous == null || !shortNoisePath.Contains(previous.Value))       //一直往前删，直到previous为空或或者不在shortNoisePath中
                             break;
-                        ChangeNodeID(newIDByOldID[previous.Value] - blockCounter * (shortNoisePath.Count + 1), graph, previous);
+                            ChangeNodeID(newIDByOldID[previous.Value] - blockCounter * (shortNoisePath.Count + 1), graph, previous);
                             currentNode = previous; 
                         }
                         //probagate next
                         currentNode = node; 
                         for (int j = 0; j < shortNoisePath.Count; j++)               //一直往后删，直到next为空或或者不在shortNoisePath中
-                    {
+                        {
                             Node<int> next = currentNode.Next;
                             if (next == null || !shortNoisePath.Contains(next.Value))
                                 break;

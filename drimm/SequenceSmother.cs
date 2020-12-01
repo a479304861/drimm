@@ -119,13 +119,13 @@ namespace SyntenyFast
 
         public IList<IList<int>> GetBlocksSign(IList<int> modifiedSequence, IList<IList<int>> simplePath, int minimumBlockLength)
         {
-            IList<IList<int>> modifiedSequencesChrs = new List<IList<int>>();
+            IList<IList<int>> modifiedSequencesChrs = new List<IList<int>>();    
             IList<int> chr = new List<int>();
             for (int i = 1; i < modifiedSequence.Count-1; i++){
                 if (modifiedSequence[i] >= 0)
                     chr.Add(modifiedSequence[i]);
                 else{
-                    modifiedSequencesChrs.Add(chr);
+                    modifiedSequencesChrs.Add(chr);     
                     chr = new List<int>();
                     while (i < modifiedSequence.Count && modifiedSequence[i] < 0){
                         i++;
@@ -161,7 +161,7 @@ namespace SyntenyFast
                     if (synSizeBySynID[currentSynID] > minimumBlockLength){         //simplePath>minimumBlockLength
                         int sign = 1;
                         if (simplePath[currentSynID][0] != element ) {              //simplePath最左端不等于element
-                      
+
                             sign = -1;
                         }
                         chromoBlocks.Add(sign*currentSynID);
@@ -198,6 +198,59 @@ namespace SyntenyFast
             blockPositions.Add(new Pair<int>(first,sequence.Count-1));      //包含这些链的起始点
             blocksResult.Add(block);
             return blocksResult;            //获得一条，包含相同Color的链
+        }
+
+        public IDictionary<int, IList<IList<Node<int>>>> getSynNodeListBySynId(IList<Node<int>> modifiedNodeSequence, IList<IList<int>> simplePaths)
+        {
+            IList<IList<Node<int>>> modifiedSequencesChrs = new List<IList<Node<int>>>();       //修改后的序列
+            IList<Node<int>> chr = new List<Node<int>>();
+            for (int i = 1; i < modifiedNodeSequence.Count - 1; i++)
+            {
+                if (modifiedNodeSequence[i].Value >= 0)
+                    chr.Add(modifiedNodeSequence[i]);
+                else
+                {
+                    modifiedSequencesChrs.Add(chr);
+                    chr = new List<Node<int>>();
+                    while (i < modifiedNodeSequence.Count && modifiedNodeSequence[i].Value < 0)
+                    {
+                        i++;
+                    }
+                    i--;
+                }
+            }
+            modifiedSequencesChrs.Add(chr);         //拆分成Chrs
+            //hashing the simplePath
+            IDictionary<int, int> synIDbyNodeID = new Dictionary<int, int>();       //基因，对应编号
+            int synID = 0;
+            foreach (IList<int> path in simplePaths)
+            {   //按照条数进行编号
+                foreach (int i in path)
+                    synIDbyNodeID.Add(i, synID);
+                synID++;
+            }
+            IList<IList<int>> sequenceBlocks = new List<IList<int>>();
+            IDictionary<int, IList<IList<Node<int>>>> synNodeListBySynId = new Dictionary<int, IList<IList<Node<int>>>>();
+            IList<Node<int>> chromoInitialElement = new List<Node<int>>();
+            int previousSynID = -1;
+            foreach (IList<Node<int>> chromo in modifiedSequencesChrs)
+            {   
+                for (int i = 0; i < chromo.Count; i++)   {
+                    int currentSynID = synIDbyNodeID[chromo[i].Value];
+                    if (currentSynID != previousSynID)    {
+                        if (synNodeListBySynId.ContainsKey(previousSynID)) {
+                            synNodeListBySynId[previousSynID].Add(chromoInitialElement);
+                        } else{
+                            synNodeListBySynId.Add(previousSynID, new List<IList<Node<int>>> { chromoInitialElement });
+                        }
+                        chromoInitialElement = new List<Node<int>>();
+                                       //把第一个颜色不同的点加入chromoInitialElement
+                    }
+                    chromoInitialElement.Add(chromo[i]);
+                    previousSynID = currentSynID;
+                }
+            }
+            return synNodeListBySynId;
         }
     }
 }

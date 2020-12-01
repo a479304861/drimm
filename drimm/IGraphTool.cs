@@ -20,6 +20,9 @@ namespace SyntenyFast
         /// <param name="graph">Graph structure: node value maps a list of nodes that has that value</param>
         /// <returns>A hashSet containing the color mapping edge for the remove nodes</returns>
         HashSet<KeyValuePair<int, int>> ReSolveCycle(Pair<int> weakEdge, int cycleLengthThreshold, ref IDictionary<int, IList<Node<int>>> graph);
+        void setWorkToSource(IDictionary<Node<int>, Node<int>> workToSource);
+        IDictionary<Node<int>, Node<int>> getWorkToSource();
+
 
         /// <summary>
         /// Get the simple path in the graph
@@ -49,5 +52,7 @@ namespace SyntenyFast
         /// <param name="sequence"></param>
         /// <param name="graph"></param>
         void ProcessTandem(ref SimpleLinkList<int> sequence, ref IDictionary<int, IList<Node<int>>> graph);
+
+       
     }
 }

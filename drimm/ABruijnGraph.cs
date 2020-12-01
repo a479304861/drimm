@@ -9,7 +9,10 @@ namespace SyntenyFast
         private readonly IGraphTool _graphTool;
         private IList<int> _sequence;
         private SimpleLinkList<int> _workingSequence = new SimpleLinkList<int>();
+        private SimpleLinkList<int> _sourceSequence = new SimpleLinkList<int>();
         IDictionary<int, IList<Node<int>>> _graph;
+        IDictionary<Node<int>, Node<int>> _workToSource= new Dictionary<Node<int>, Node<int>>();
+        IDictionary<Node<int>, Pair<int>> _nodeToIndex = new Dictionary<Node<int>, Pair<int>>();
 
         public ABruijnGraph(IGraphTool graphTool)
         {
@@ -25,9 +28,70 @@ namespace SyntenyFast
         {
             _sequence = sequence;
             _workingSequence.AddList(sequence);         //把List转换成单链表
-            _graph = GenerateGraph(_workingSequence);
+            _sourceSequence.AddList(sequence);         //把List转换成单链表
+            IList<Node<int>> _workingMembers= _workingSequence.GetMembers();
+            IList<Node<int>> _sourceMembers= _sourceSequence.GetMembers();
+        
+            IList<IList<Node<int>>> sourceSequencesChrs = new List<IList<Node<int>>>();       //获得原序列对应的坐标
+            IList<Node<int>> chr = new List<Node<int>>();
+            for (int i = 1; i < _sourceMembers.Count - 1; i++)
+            {
+                if (_sourceMembers[i].Value >= 0)
+                    chr.Add(_sourceMembers[i]);
+                else
+                {
+                    sourceSequencesChrs.Add(chr);
+                    chr = new List<Node<int>>();
+                    while (i < _sourceMembers.Count && _sourceMembers[i].Value < 0)
+                    {
+                        i++;
+                    }
+                    i--;
+                }
+            }
+            sourceSequencesChrs.Add(chr);         //拆分成Chrs
 
+            for(int i = 0; i < sourceSequencesChrs.Count; i++)
+            {
+                for(int j = 0; j < sourceSequencesChrs[i].Count; j++)
+                {
+                    _nodeToIndex.Add(sourceSequencesChrs[i][j], new Pair<int>(i,j));
+                }
+            }
+            for (int i = 0; i < _workingMembers.Count; i++)         //生成map
+            {
+                 _workToSource.Add(_workingMembers[i], _sourceMembers[i]);
+            }   
+            _graph = GenerateGraph(_workingSequence);
+            _graphTool.setWorkToSource(_workToSource);
         }
+
+
+        /// <summary>
+        /// Return the list nodes in the modified sequence
+        /// </summary>
+        /// <returns></returns>
+        public IList<int> GetModifiedSequence()
+        {
+            return _workingSequence.GetMembersValue();
+        }
+        public IList<Node<int>> GetModifiedNodeSequence()
+        {
+            return _workingSequence.GetMembers();
+        }
+        public IList<Node<int>> GetSourceSequence()
+        {
+            return _sourceSequence.GetMembers();
+        }
+        public IDictionary<Node<int>, Node<int>> GetWorkToSource()
+        {
+            return _graphTool.getWorkToSource();
+        }
+        public IDictionary<Node<int>, Pair<int>> GetNodeToIndex()
+        {
+            return _nodeToIndex;
+        }
+
 
         /// <summary>
         /// Simplify the graph by removing the cycles and smoothing techniques. On the way of removing the cycle, if any nodes 
@@ -230,14 +294,6 @@ namespace SyntenyFast
             return colorByNodeID; 
         }
 
-        /// <summary>
-        /// Return the list nodes in the modified sequence
-        /// </summary>
-        /// <returns></returns>
-        public IList<int> GetModifiedSequence()
-        {
-            return _workingSequence.GetMembersValue();
-        }
 
         /// <summary>
         /// Find the dominant color of the neighbors of a node

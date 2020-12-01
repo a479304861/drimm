@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Util.Collection;
 
 namespace SyntenyFast
 {
@@ -39,5 +40,13 @@ namespace SyntenyFast
         /// </summary>
         /// <returns></returns>
         IList<int> GetModifiedSequence();
+
+        IList<Node<int>> GetModifiedNodeSequence();
+  
+        IList<Node<int>> GetSourceSequence();
+
+        IDictionary<Node<int>, Node<int>> GetWorkToSource();
+
+        IDictionary<Node<int>, Pair<int>> GetNodeToIndex();
     }
 }

@@ -1,30 +1,44 @@
 ﻿using System;
+using System.IO;
 
 namespace SyntenyFast
 {
     internal static class Program
     {
-        private const global::System.String INFILE = "G:/桌面/毕设/drimm_input.sequence";
         private const global::System.String OUTDIR = "G:/桌面/毕设/output";
+        private const global::System.String INPUT = "E:/学习资料/IjDemo/graduate_project/file";
 
         private static void Main(string[] args)
         {
-            foreach(String s in args)
+
+            if (args.Length != 4)
             {
-                Console.Out.WriteLine(s);
+                Console.Out.Write("参数不正确");
+                return;
             }
-            
-            int cycleLengthThreshold = 30;          //环长度          
-       
-            string infile = INFILE;
-     
-            string outdir = OUTDIR;
-       
-            int dustLengthThreshold = 8;    
+            int cycleLengthThreshold = 20;          //环长度     
+            int dustLengthThreshold = 20;
+            string infile = args[0];
+            string outdir = args[1];
+           
+            if (!Directory.Exists(outdir))
+            {
+                Directory.CreateDirectory(outdir);
+            }
+            cycleLengthThreshold =int.Parse(args[2]);
+            dustLengthThreshold= int.Parse(args[3]);
 
-            int simplificationSteps = 15;        //步数15
+            //步数15
+            /* String infile = INPUT + '/'+ "801097480652455936.sequence";
+             String outdir = OUTDIR + '/' + "801097480652455936";
+             int cycleLengthThreshold = 20;
 
-
+             int dustLengthThreshold = 20;
+             if (!Directory.Exists(outdir))
+             {
+                 Directory.CreateDirectory(outdir);
+             }*/
+            int simplificationSteps = 15;
             IGraphTool graphTool = new GraphTool();         //创建图池子
             ABruijnGraph aBruijnGraph = new ABruijnGraph(graphTool);    //AB图
             IDataReader dataReader = new SyntenyDataReader(infile, ' ');
